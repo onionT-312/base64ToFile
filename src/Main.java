@@ -15,9 +15,9 @@ public class Main {
             String base64Data = readFile(inputBase64);
 
             //convert Base64 to file
-//            decodeBase64(base64Data, outputBase64 + ".png");
-//            decodeBase64(base64Data, outputBase64 + ".png");
-            decodeBase64(base64Data, outputBase64 + ".png");
+//            decodeBase64(base64Data, outputBase64 + ".png");              //image
+//            decodeBase64(base64Data, outputBase64 + ".xlsx");             //excel
+            decodeBase64(base64Data, outputBase64 + ".pdf");        //pdf
 
             System.out.println("File has decoded successfully!");
 
