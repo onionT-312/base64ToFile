@@ -5,26 +5,27 @@ import java.util.Base64;
 public class Main {
 
     public static void main(String[] args) {
-        //input path
-        String inputBase64 = "input.txt";
-
-        //output path
-        String outputBase64 = "output";
+        String inputBase64 = "src/resource/input.txt";
+        String outputBase64 = "src/resource/output";
 
         try {
             String base64Data = readFile(inputBase64);
+            String fileExtension = detectFileType(base64Data);
+            if (fileExtension.equals("unknown")) {
+                System.out.println("Không xác định được loại file!");
+                return;
+            }
 
-            //convert Base64 to file
-//            decodeBase64(base64Data, outputBase64 + ".png");              //image
-//            decodeBase64(base64Data, outputBase64 + ".xlsx");             //excel
-            decodeBase64(base64Data, outputBase64 + ".pdf");        //pdf
+            // Tạo output với phần mở rộng file phù hợp
+            String outputFilePath = outputBase64 + "." + fileExtension;
 
-            System.out.println("File has decoded successfully!");
+            // Decode và lưu file
+            decodeBase64(base64Data, outputFilePath);
 
+            System.out.println("File đã giải mã thành công: " + outputFilePath);
         } catch (IOException e) {
-            System.out.println("File has decoded failed!" + e.getMessage());
+            System.out.println("File giải mã thất bại: " + e.getMessage());
         }
-
     }
 
     public static String sanitizeBase64(String data) {
@@ -34,22 +35,41 @@ public class Main {
     public static void decodeBase64(String data, String output) throws IOException {
         data = sanitizeBase64(data);
 
-        if(data.contains(",")) {
+        if (data.contains(",")) {
             data = data.split(",")[1];
         }
 
-        //decode string base64
+        // Decode Base64 thành byte[]
         byte[] decodedBytes = Base64.getDecoder().decode(data);
 
-        //write data to file
+        // Ghi file
         try (FileOutputStream fos = new FileOutputStream(output)) {
             fos.write(decodedBytes);
         }
     }
 
-    //read file .txt
+    public static String detectFileType(String base64) {
+        byte[] decodedBytes = Base64.getDecoder().decode(base64);
+
+        if (decodedBytes.length < 4) return "unknown"; // Dữ liệu quá ngắn
+
+        String hex = String.format("%02X%02X%02X%02X", decodedBytes[0], decodedBytes[1], decodedBytes[2], decodedBytes[3]);
+
+        // Kiểm tra Magic Number
+        switch (hex) {
+            case "89504E47": return "png";  // PNG
+            case "FFD8FFE0":
+            case "FFD8FFE1":
+            case "FFD8FFE2":
+            case "FFD8FFE3": return "jpg";  // JPG
+            case "25504446": return "pdf";  // PDF
+            case "504B0304": return "zip";  // ZIP hoặc DOCX/XLSX/PPTX
+            case "D0CF11E0": return "doc";  // DOC (Office cũ)
+            default: return "unknown"; // Không xác định
+        }
+    }
+
     public static String readFile(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path)));
     }
-
 }
